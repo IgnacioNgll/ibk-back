@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ibk-users
+  namespace: eu2-cudi-01
+  labels:
+    product: users
+    app: ibk-users
+    tier: backend
+    phase: dev
+    job: v1
+spec:
+  schedule: "30 9 * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        product: users
+        app: ibk-users
+        tier: backend
+        phase: dev
+        job: v1
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+            - name: azure-registry-secret
+          containers:
+          - env:
+            - name: ambiente
+              value: dev
+            - name: version
+              value: 0.0.1
+            - name: name
+              value: ibk-users
+            - name: JAVA_OPTIONS
+              value: -Xms64m -Xmx128m
+            image: users.azurecr.io/users-prueba:0.0.1
+            name: ibk-users
+            imagePullPolicy: Always
+            volumeMounts:
+            - name: azurefilestorage
+              mountPath: /data
+          restartPolicy: OnFailure
+          volumes:
+          - name: azurefilestorage
+            azureFile:
+              secretName: azure-storage-secret
+              shareName: vcd-users
+              readOnly: false
